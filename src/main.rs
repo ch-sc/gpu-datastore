@@ -1,3 +1,5 @@
+#![feature(array_methods)]
+
 use gpu_datastore::engine::prelude::KernelLauncher;
 
 use gpu_datastore::common::prelude::*;
@@ -18,9 +20,19 @@ fn main() -> Result<()> {
     launcher.allocate_buffer(DeviceBuffer::from_slice(&[2.0f64; 10])?); // in 2
     launcher.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 1
     launcher.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 2
-    let result = launcher.launch()?;
+    launcher.launch()?;
 
-    println!("result 2: {:?}", result);
+    let mut out_host = [0.0f64; 10];
+    launcher.collect_result(2, out_host.as_mut_slice(), 10)?;
+    for x in out_host.iter() {
+        assert_eq!(3_f64, *x)
+    }
+    launcher.collect_result(3, out_host.as_mut_slice(), 10)?;
+    for x in out_host.iter() {
+        assert_eq!(3_f64, *x)
+    }
+
+    println!("result 2: {:?}", out_host);
 
     Ok(())
 }

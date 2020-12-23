@@ -47,13 +47,7 @@ impl KernelLauncher {
         self.buffers.push(dev_buffer);
     }
 
-    pub fn launch(&mut self) -> Result<Vec<f64>> {
-        // let in_x = &mut buffers[0].as_device_ptr();
-        // let in_y = &mut buffers[1];
-        // let out_1 = &mut buffers[2];
-        // let out_2 = &mut buffers[3];
-
-        // ---------- actual kernel launch code ----------
+    pub fn launch(&mut self) -> Result<()> {
         let buffers = &mut self.buffers;
         let module: &Module = self.module.as_ref().unwrap();
         let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;
@@ -83,21 +77,19 @@ impl KernelLauncher {
         }
         // Kernel launches are asynchronous, so we wait for the kernels to finish executing.
         stream.synchronize()?;
+        Ok(())
+    }
 
-        // ---------- retrieve result ----------
-
-        // Copy the results back to host memory
-        let mut out_host = [0.0f64; 20];
-        let out_1 = &mut buffers[2];
-        out_1.copy_to(&mut out_host[0..10])?;
-        let out_2 = &mut buffers[3];
-        out_2.copy_to(&mut out_host[10..20])?;
-
-        for x in out_host.iter() {
-            assert_eq!(3.0 as u32, *x as u32);
-        }
-
-        Ok(out_host.to_vec())
+    pub fn collect_result(
+        &mut self,
+        buffer_index: usize,
+        result_buffer: &mut [f64],
+        length: usize,
+    ) -> Result<()> {
+        let buffers = &mut self.buffers;
+        let out_buffer = &mut buffers[buffer_index];
+        out_buffer.copy_to(&mut result_buffer[0..length])?;
+        Ok(())
     }
 
     pub fn launch_add_kernel(&self) -> Result<f64> {
