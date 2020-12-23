@@ -6,10 +6,10 @@ use rustacuda::memory::DeviceBox;
 use std::ffi::CString;
 
 pub struct KernelLauncher {
-    _device: Device,
-    _context: Context,
-    module: Option<Module>,
     buffers: Vec<DeviceBuffer<f64>>,
+    module: Option<Module>,
+    _context: Context,
+    _device: Device,
 }
 
 impl KernelLauncher {
@@ -29,11 +29,6 @@ impl KernelLauncher {
             buffers: Vec::new(),
         })
     }
-
-    // fn extract_ptx_code(cuda_kernel_file: &str) -> ptx_builder::error::Result<()> {
-    //     let builder = Builder::new(format!("{}/{}", KERNEL_PTX_PATH, cuda_kernel_file))?;
-    //     CargoAdapter::with_env_var("KERNEL_PTX_PATH").build(builder)
-    // }
 
     pub fn load_file(&mut self, module_data: &CString) -> Result<()> {
         // let module_data = CString::new(include_str!(file_path))?;

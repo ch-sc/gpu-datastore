@@ -22,3 +22,9 @@ impl From<CudaError> for DataStoreErrors {
         DataStoreErrors::CudaExecutionError(format!("{:?}", cuda_error))
     }
 }
+
+impl<T> From<(CudaError, T)> for DataStoreErrors {
+    fn from(t: (CudaError, T)) -> Self {
+        DataStoreErrors::from(t.0)
+    }
+}
