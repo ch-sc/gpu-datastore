@@ -83,6 +83,7 @@ impl KernelLauncher {
     ) -> Result<()> {
         let buffers = &mut self.buffers;
         let out_buffer = &mut buffers[buffer_index];
+        println!(out_buffer);
         out_buffer.copy_to(&mut result_buffer[0..length])?;
         Ok(())
     }
