@@ -43,11 +43,14 @@ impl KernelRunner {
         self.buffers.push(dev_buffer);
     }
 
-    pub fn launch(&mut self, config: KernelConfiguration) -> Result<()> {
+    pub fn launch_expr_binary_kernel(&mut self, config: KernelConfiguration) -> Result<()> {
         let kernel_fun_name = config.kernel_name.as_str();
         let total_work_items = config.work_items;
         let work_group_size = config.work_group_size;
         let grid_size = total_work_items / work_group_size;
+
+        let batch = config.batch_size;
+        let stride = total_work_items / batch;
 
         let module: &Module = self.module.as_ref().unwrap();
         let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;
@@ -61,14 +64,16 @@ impl KernelRunner {
                 buffers[0].as_device_ptr(),
                 buffers[1].as_device_ptr(),
                 buffers[3].as_device_ptr(),
-                10
+                config.batch_size,
+                stride
             ));
             result?;
         }
+
         Ok(())
     }
 
-    pub fn launch2(&mut self) -> Result<()> {
+    pub fn launch_test_kernel_2(&mut self) -> Result<()> {
         let buffers = &mut self.buffers;
         let module: &Module = self.module.as_ref().unwrap();
         let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;

@@ -11,26 +11,26 @@ use std::mem;
 
 const DATA_SIZE: usize = 16 * MB as usize;
 
-fn test_run_1(launcher: &mut KernelRunner) -> Result<()> {
-    let result = launcher.launch_test_kernel()?;
+fn test_run_1(runner: &mut KernelRunner) -> Result<()> {
+    let result = runner.launch_test_kernel()?;
     println!("result 1: {:?}", result);
     Ok(())
 }
 
-fn test_run_2(launcher: &mut KernelRunner) -> Result<()> {
+fn test_run_2(runner: &mut KernelRunner) -> Result<()> {
     // File needs to exist at compile time.
     // Relative path starts from this file's directory
     let module_data = CString::new(include_str!("../resources/add.ptx"))?;
-    launcher.load_file(&module_data)?;
-    launcher.allocate_buffer(DeviceBuffer::from_slice(&[1.0f64; 10])?); // in 1
-    launcher.allocate_buffer(DeviceBuffer::from_slice(&[2.0f64; 10])?); // in 2
-    launcher.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 1
-    launcher.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 2
-    launcher.launch2()?;
+    runner.load_file(&module_data)?;
+    runner.allocate_buffer(DeviceBuffer::from_slice(&[1.0f64; 10])?); // in 1
+    runner.allocate_buffer(DeviceBuffer::from_slice(&[2.0f64; 10])?); // in 2
+    runner.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 1
+    runner.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 2
+    runner.launch_test_kernel_2()?;
 
     let mut out_host = [0.0f64; 10];
-    launcher.collect_result(2, out_host.as_mut_slice(), 10)?;
-    launcher.collect_result(3, out_host.as_mut_slice(), 10)?;
+    runner.collect_result(2, out_host.as_mut_slice(), 10)?;
+    runner.collect_result(3, out_host.as_mut_slice(), 10)?;
 
     println!("result 2: {:?}", out_host);
     Ok(())
@@ -57,22 +57,23 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
 
     let vec_a = generate_data(elements)?;
     let vec_b = generate_data(elements)?;
-    let vec_out = &[0_f64; DATA_SIZE];
+    let vec_out = &mut [0_f64; DATA_SIZE];
 
     let config = KernelConfiguration::new("add", 128, 128, elements as u32, 0);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_a)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_b)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(vec_out)?);
-    runner.launch(config)?;
+    runner.launch_expr_binary_kernel(config)?;
+    runner.collect_result(2, vec_out, elements)?;
     Ok(())
 }
 
 fn main() -> Result<()> {
-    let mut launcher = KernelRunner::try_new()?;
+    let mut runner = KernelRunner::try_new()?;
 
-    test_run_1(&mut launcher)?;
-    test_run_2(&mut launcher)?;
-    test_run_3(&mut launcher)?;
+    test_run_1(&mut runner)?;
+    test_run_2(&mut runner)?;
+    test_run_3(&mut runner)?;
 
     Ok(())
 }
