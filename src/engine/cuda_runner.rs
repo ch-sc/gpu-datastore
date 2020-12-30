@@ -31,7 +31,7 @@ impl KernelRunner {
         })
     }
 
-    pub fn load_file(&mut self, module_data: &CString) -> Result<()> {
+    pub fn load_module(&mut self, module_data: &CString) -> Result<()> {
         // let module_data = CString::new(include_str!(file_path))?;
         let module = Module::load_from_string(module_data)?;
         self.module = Some(module);
@@ -43,7 +43,7 @@ impl KernelRunner {
         self.buffers.push(dev_buffer);
     }
 
-    pub fn launch_expr_binary_kernel(&mut self, config: KernelConfiguration) -> Result<()> {
+    pub fn launch_binary_arithmetics_kernel(&mut self, config: KernelConfiguration) -> Result<()> {
         let kernel_fun_name = config.kernel_name.as_str();
         let total_work_items = config.work_items;
         let work_group_size = config.work_group_size;
@@ -69,6 +69,8 @@ impl KernelRunner {
             ));
             result?;
         }
+
+        stream.synchronize()?;
 
         Ok(())
     }

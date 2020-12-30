@@ -21,7 +21,7 @@ fn test_run_2(runner: &mut KernelRunner) -> Result<()> {
     // File needs to exist at compile time.
     // Relative path starts from this file's directory
     let module_data = CString::new(include_str!("../resources/add.ptx"))?;
-    runner.load_file(&module_data)?;
+    runner.load_module(&module_data)?;
     runner.allocate_buffer(DeviceBuffer::from_slice(&[1.0f64; 10])?); // in 1
     runner.allocate_buffer(DeviceBuffer::from_slice(&[2.0f64; 10])?); // in 2
     runner.allocate_buffer(DeviceBuffer::from_slice(&[0.0f64; 10])?); // out 1
@@ -36,9 +36,9 @@ fn test_run_2(runner: &mut KernelRunner) -> Result<()> {
     Ok(())
 }
 
-fn generate_data(elements: usize) -> Result<Vec<f64>> {
+fn generate_data(values: usize) -> Result<Vec<f64>> {
     // create arrow primitive array
-    let mut builder = PrimitiveBuilder::<Float64Type>::new(elements);
+    let mut builder = PrimitiveBuilder::<Float64Type>::new(values);
     (0..DATA_SIZE).try_for_each(|i| builder.append_value((i % 128) as f64))?;
     let array = builder.finish();
 
@@ -51,20 +51,20 @@ fn generate_data(elements: usize) -> Result<Vec<f64>> {
 fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
     // load different module
     let module_data = CString::new(include_str!("../resources/binary_arithmetics.ptx"))?;
-    runner.load_file(&module_data)?;
+    runner.load_module(&module_data)?;
 
-    const ELEMENTS: usize = (DATA_SIZE / mem::size_of::<f64>()) as usize;
+    const VALUES: usize = DATA_SIZE / mem::size_of::<f64>();
 
-    let vec_a = generate_data(ELEMENTS)?;
-    let vec_b = generate_data(ELEMENTS)?;
-    let vec_out = &mut [0_f64; ELEMENTS];
+    let vec_a = generate_data(VALUES)?;
+    let vec_b = generate_data(VALUES)?;
+    let vec_out = &mut [0_f64; VALUES];
 
-    let config = KernelConfiguration::new("add", 128, 128, ELEMENTS as u32, 0);
+    let config = KernelConfiguration::new("add", 128, 128, VALUES as u32, 0);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_a)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_b)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(vec_out)?);
-    runner.launch_expr_binary_kernel(config)?;
-    runner.collect_result(2, vec_out, ELEMENTS)?;
+    runner.launch_binary_arithmetics_kernel(config)?;
+    runner.collect_result(2, vec_out, VALUES)?;
     dbg!(vec_out);
     Ok(())
 }
