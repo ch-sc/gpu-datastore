@@ -60,14 +60,13 @@ impl KernelRunner {
 
         let buffers = &mut self.buffers;
         unsafe {
-            let result = launch!(fun<<<grid_size, work_group_size, 0, stream>>>(
+            launch!(fun<<<grid_size, work_group_size, 0, stream>>>(
                 buffers[0].as_device_ptr(),
                 buffers[1].as_device_ptr(),
                 buffers[2].as_device_ptr(),
                 config.batch_size,
                 stride
-            ));
-            result?;
+            ))?;
         }
 
         stream.synchronize()?;

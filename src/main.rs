@@ -9,7 +9,7 @@ use rustacuda::memory::DeviceBuffer;
 use std::ffi::CString;
 use std::mem;
 
-const DATA_SIZE: usize = 16 * KB as usize;
+const DATA_SIZE: usize = 16 * MB as usize;
 
 fn test_run_1(runner: &mut KernelRunner) -> Result<()> {
     let result = runner.launch_test_kernel()?;
@@ -36,7 +36,7 @@ fn test_run_2(runner: &mut KernelRunner) -> Result<()> {
     Ok(())
 }
 
-fn generate_data(values: usize) -> Result<Vec<f64>> {
+fn generate_data(values: usize) -> Result<Box<[f64]>> {
     // create arrow primitive array
     let mut builder = PrimitiveBuilder::<Float64Type>::new(values);
     (0..DATA_SIZE).try_for_each(|i| builder.append_value((i % 128) as f64))?;
@@ -44,7 +44,7 @@ fn generate_data(values: usize) -> Result<Vec<f64>> {
 
     // arrow array -> native array
     let buf_ref = &array.data_ref().buffers()[0];
-    let data = unsafe { buf_ref.typed_data::<f64>().to_vec() };
+    let data = unsafe { buf_ref.typed_data::<f64>().to_vec().into_boxed_slice() };
     Ok(data)
 }
 
@@ -57,7 +57,8 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
 
     let vec_a = generate_data(VALUES)?;
     let vec_b = generate_data(VALUES)?;
-    let vec_out = &mut [0_f64; VALUES];
+    let vec_out = &mut vec![0_f64; VALUES].into_boxed_slice();
+    // let vec_out = &mut [0_f64; VALUES]
 
     let config = KernelConfiguration::new("add", 128, 128, VALUES as u32, 0);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_a)?);
