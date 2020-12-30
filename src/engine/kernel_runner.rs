@@ -3,16 +3,17 @@ use rustacuda::prelude::*;
 use crate::common::errors::*;
 use rustacuda::memory::DeviceBox;
 
+use crate::engine::kernel_config::KernelConfiguration;
 use std::ffi::CString;
 
-pub struct KernelLauncher {
+pub struct KernelRunner {
     buffers: Vec<DeviceBuffer<f64>>,
     module: Option<Module>,
     _context: Context,
     _device: Device,
 }
 
-impl KernelLauncher {
+impl KernelRunner {
     pub fn try_new() -> Result<Self> {
         // Initialize the CUDA API
         rustacuda::init(CudaFlags::empty())?;
@@ -42,7 +43,31 @@ impl KernelLauncher {
         self.buffers.push(dev_buffer);
     }
 
-    pub fn launch(&mut self) -> Result<()> {
+    pub fn launch(&mut self, config: KernelConfiguration) -> Result<()> {
+        let kernel_fun_name = config.kernel_name.as_str();
+        let global_work_size = config.work_items;
+        let work_group_size = config.work_group_size;
+
+        let module: &Module = self.module.as_ref().unwrap();
+        let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;
+
+        let function_name = CString::new(kernel_fun_name)?;
+        let fun = module.get_function(&function_name)?;
+
+        let buffers = &mut self.buffers;
+        unsafe {
+            let result = launch!(fun<<<global_work_size, work_group_size, 0, stream>>>(
+                buffers[0].as_device_ptr(),
+                buffers[1].as_device_ptr(),
+                buffers[3].as_device_ptr(),
+                10
+            ));
+            result?;
+        }
+        Ok(())
+    }
+
+    pub fn launch2(&mut self) -> Result<()> {
         let buffers = &mut self.buffers;
         let module: &Module = self.module.as_ref().unwrap();
         let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;
@@ -83,12 +108,11 @@ impl KernelLauncher {
     ) -> Result<()> {
         let buffers = &mut self.buffers;
         let out_buffer = &mut buffers[buffer_index];
-        println!(out_buffer);
         out_buffer.copy_to(&mut result_buffer[0..length])?;
         Ok(())
     }
 
-    pub fn launch_add_kernel(&self) -> Result<f64> {
+    pub fn launch_test_kernel(&self) -> Result<f64> {
         let module_data = CString::new(include_str!("../../resources/add.ptx"))?;
         let module = Module::load_from_string(&module_data)?;
 

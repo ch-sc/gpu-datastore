@@ -1,30 +1,38 @@
+use arrow::error::ArrowError;
 use rustacuda::error::CudaError;
 use std::ffi::NulError;
 use std::result;
 
-pub type Result<T> = result::Result<T, DataStoreErrors>;
+pub type Result<T> = result::Result<T, DataStoreError>;
 
 #[derive(Debug)]
-pub enum DataStoreErrors {
+pub enum DataStoreError {
     CudaParseError(String),
     CudaExecutionError(String),
-    DataStoreError(String),
+    ArrowError(String),
+    InternalError(String),
 }
 
-impl From<NulError> for DataStoreErrors {
+impl From<NulError> for DataStoreError {
     fn from(nul_error: NulError) -> Self {
-        DataStoreErrors::CudaExecutionError(format!("{:?}", nul_error))
+        DataStoreError::CudaExecutionError(format!("{:?}", nul_error))
     }
 }
 
-impl From<CudaError> for DataStoreErrors {
+impl From<CudaError> for DataStoreError {
     fn from(cuda_error: CudaError) -> Self {
-        DataStoreErrors::CudaExecutionError(format!("{:?}", cuda_error))
+        DataStoreError::CudaExecutionError(format!("{:?}", cuda_error))
     }
 }
 
-impl<T> From<(CudaError, T)> for DataStoreErrors {
+impl<T> From<(CudaError, T)> for DataStoreError {
     fn from(t: (CudaError, T)) -> Self {
-        DataStoreErrors::from(t.0)
+        DataStoreError::from(t.0)
+    }
+}
+
+impl From<ArrowError> for DataStoreError {
+    fn from(error: ArrowError) -> Self {
+        DataStoreError::ArrowError(format!("{:?}", error))
     }
 }
