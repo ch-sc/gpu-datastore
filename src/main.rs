@@ -66,7 +66,19 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
     runner.allocate_buffer(DeviceBuffer::from_slice(vec_out)?);
     runner.launch_binary_arithmetics_kernel(config)?;
     runner.collect_result(2, vec_out, VALUES)?;
-    dbg!(vec_out);
+    let min = vec_out
+        .iter()
+        .min_by(|x, y| x.partial_cmp(y).unwrap())
+        .expect("expected min");
+    let max = vec_out
+        .iter()
+        .max_by(|x, y| x.partial_cmp(y).unwrap())
+        .expect("expected max");
+    dbg!(min);
+    dbg!(max);
+    vec_out.iter().filter(|x| **x == *min).count();
+    dbg!(vec_out.iter().filter(|x| x.eq(&min)).count());
+    dbg!(vec_out.iter().filter(|x| x.eq(&max)).count());
     Ok(())
 }
 
