@@ -72,8 +72,8 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
 fn main() -> Result<()> {
     let mut runner = KernelRunner::try_new()?;
 
-    test_run_1(&mut runner)?;
-    test_run_2(&mut runner)?;
+    // test_run_1(&mut runner)?;
+    // test_run_2(&mut runner)?;
     test_run_3(&mut runner)?;
 
     Ok(())

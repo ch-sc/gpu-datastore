@@ -116,6 +116,8 @@ impl KernelRunner {
     ) -> Result<()> {
         let buffers = &mut self.buffers;
         let out_buffer = &mut buffers[buffer_index];
+        dbg!(out_buffer.len());
+        dbg!(length);
         out_buffer.copy_to(&mut result_buffer[0..length])?;
         Ok(())
     }
