@@ -21,8 +21,8 @@
 )
 {
 	.reg .pred 	%p<3>;
-	.reg .f32 	%f<4>;
 	.reg .b32 	%r<14>;
+	.reg .f64 	%fd<4>;
 	.reg .b64 	%rd<11>;
 
 
@@ -47,14 +47,14 @@
 
 BB0_2:
 	add.s32 	%r12, %r3, %r13;
-	mul.wide.u32 	%rd7, %r12, 4;
+	mul.wide.u32 	%rd7, %r12, 8;
 	add.s64 	%rd8, %rd1, %rd7;
 	add.s64 	%rd9, %rd2, %rd7;
-	ld.global.f32 	%f1, [%rd9];
-	ld.global.f32 	%f2, [%rd8];
-	add.f32 	%f3, %f2, %f1;
+	ld.global.f64 	%fd1, [%rd9];
+	ld.global.f64 	%fd2, [%rd8];
+	add.f64 	%fd3, %fd2, %fd1;
 	add.s64 	%rd10, %rd3, %rd7;
-	st.global.f32 	[%rd10], %f3;
+	st.global.f64 	[%rd10], %fd3;
 	add.s32 	%r13, %r2, %r13;
 	setp.lt.u32	%p2, %r13, %r1;
 	@%p2 bra 	BB0_2;
@@ -73,8 +73,8 @@ BB0_3:
 )
 {
 	.reg .pred 	%p<3>;
-	.reg .f32 	%f<4>;
 	.reg .b32 	%r<14>;
+	.reg .f64 	%fd<4>;
 	.reg .b64 	%rd<11>;
 
 
@@ -99,14 +99,14 @@ BB0_3:
 
 BB1_2:
 	add.s32 	%r12, %r3, %r13;
-	mul.wide.u32 	%rd7, %r12, 4;
+	mul.wide.u32 	%rd7, %r12, 8;
 	add.s64 	%rd8, %rd1, %rd7;
 	add.s64 	%rd9, %rd2, %rd7;
-	ld.global.f32 	%f1, [%rd9];
-	ld.global.f32 	%f2, [%rd8];
-	sub.f32 	%f3, %f2, %f1;
+	ld.global.f64 	%fd1, [%rd9];
+	ld.global.f64 	%fd2, [%rd8];
+	sub.f64 	%fd3, %fd2, %fd1;
 	add.s64 	%rd10, %rd3, %rd7;
-	st.global.f32 	[%rd10], %f3;
+	st.global.f64 	[%rd10], %fd3;
 	add.s32 	%r13, %r2, %r13;
 	setp.lt.u32	%p2, %r13, %r1;
 	@%p2 bra 	BB1_2;
@@ -125,8 +125,8 @@ BB1_3:
 )
 {
 	.reg .pred 	%p<3>;
-	.reg .f32 	%f<4>;
 	.reg .b32 	%r<14>;
+	.reg .f64 	%fd<4>;
 	.reg .b64 	%rd<11>;
 
 
@@ -151,19 +151,71 @@ BB1_3:
 
 BB2_2:
 	add.s32 	%r12, %r3, %r13;
-	mul.wide.u32 	%rd7, %r12, 4;
+	mul.wide.u32 	%rd7, %r12, 8;
 	add.s64 	%rd8, %rd1, %rd7;
 	add.s64 	%rd9, %rd2, %rd7;
-	ld.global.f32 	%f1, [%rd9];
-	ld.global.f32 	%f2, [%rd8];
-	mul.f32 	%f3, %f2, %f1;
+	ld.global.f64 	%fd1, [%rd9];
+	ld.global.f64 	%fd2, [%rd8];
+	mul.f64 	%fd3, %fd2, %fd1;
 	add.s64 	%rd10, %rd3, %rd7;
-	st.global.f32 	[%rd10], %f3;
+	st.global.f64 	[%rd10], %fd3;
 	add.s32 	%r13, %r2, %r13;
 	setp.lt.u32	%p2, %r13, %r1;
 	@%p2 bra 	BB2_2;
 
 BB2_3:
+	ret;
+}
+
+	// .globl	division
+.visible .entry division(
+	.param .u64 division_param_0,
+	.param .u64 division_param_1,
+	.param .u64 division_param_2,
+	.param .u32 division_param_3,
+	.param .u32 division_param_4
+)
+{
+	.reg .pred 	%p<3>;
+	.reg .b32 	%r<14>;
+	.reg .f64 	%fd<4>;
+	.reg .b64 	%rd<11>;
+
+
+	ld.param.u64 	%rd4, [division_param_0];
+	ld.param.u64 	%rd5, [division_param_1];
+	ld.param.u64 	%rd6, [division_param_2];
+	ld.param.u32 	%r7, [division_param_3];
+	ld.param.u32 	%r6, [division_param_4];
+	mul.lo.s32 	%r1, %r6, %r7;
+	setp.eq.s32	%p1, %r1, 0;
+	@%p1 bra 	BB3_3;
+
+	add.s32 	%r2, %r6, %r6;
+	mov.u32 	%r9, %tid.x;
+	mov.u32 	%r10, %ctaid.x;
+	mov.u32 	%r11, %ntid.x;
+	mad.lo.s32 	%r3, %r11, %r10, %r9;
+	cvta.to.global.u64 	%rd1, %rd4;
+	cvta.to.global.u64 	%rd2, %rd5;
+	cvta.to.global.u64 	%rd3, %rd6;
+	mov.u32 	%r13, 0;
+
+BB3_2:
+	add.s32 	%r12, %r3, %r13;
+	mul.wide.u32 	%rd7, %r12, 8;
+	add.s64 	%rd8, %rd1, %rd7;
+	add.s64 	%rd9, %rd2, %rd7;
+	ld.global.f64 	%fd1, [%rd9];
+	ld.global.f64 	%fd2, [%rd8];
+	div.rn.f64 	%fd3, %fd2, %fd1;
+	add.s64 	%rd10, %rd3, %rd7;
+	st.global.f64 	[%rd10], %fd3;
+	add.s32 	%r13, %r2, %r13;
+	setp.lt.u32	%p2, %r13, %r1;
+	@%p2 bra 	BB3_2;
+
+BB3_3:
 	ret;
 }
 
