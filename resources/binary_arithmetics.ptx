@@ -7,7 +7,7 @@
 //
 
 .version 6.4
-.target sm_72
+.target sm_70
 .address_size 64
 
 	// .globl	add
@@ -68,43 +68,47 @@ BB0_3:
 	.param .u64 sub_param_0,
 	.param .u64 sub_param_1,
 	.param .u64 sub_param_2,
-	.param .u32 sub_param_3
+	.param .u32 sub_param_3,
+	.param .u32 sub_param_4
 )
 {
 	.reg .pred 	%p<3>;
 	.reg .f32 	%f<4>;
-	.reg .b32 	%r<11>;
+	.reg .b32 	%r<14>;
 	.reg .b64 	%rd<11>;
 
 
 	ld.param.u64 	%rd4, [sub_param_0];
 	ld.param.u64 	%rd5, [sub_param_1];
 	ld.param.u64 	%rd6, [sub_param_2];
-	ld.param.u32 	%r6, [sub_param_3];
-	mov.u32 	%r1, %ntid.x;
-	mov.u32 	%r7, %ctaid.x;
-	mov.u32 	%r8, %tid.x;
-	mad.lo.s32 	%r10, %r1, %r7, %r8;
-	setp.ge.s32	%p1, %r10, %r6;
+	ld.param.u32 	%r7, [sub_param_3];
+	ld.param.u32 	%r6, [sub_param_4];
+	mul.lo.s32 	%r1, %r6, %r7;
+	setp.eq.s32	%p1, %r1, 0;
 	@%p1 bra 	BB1_3;
 
-	cvta.to.global.u64 	%rd1, %rd6;
+	add.s32 	%r2, %r6, %r6;
+	mov.u32 	%r9, %tid.x;
+	mov.u32 	%r10, %ctaid.x;
+	mov.u32 	%r11, %ntid.x;
+	mad.lo.s32 	%r3, %r11, %r10, %r9;
+	cvta.to.global.u64 	%rd1, %rd4;
 	cvta.to.global.u64 	%rd2, %rd5;
-	cvta.to.global.u64 	%rd3, %rd4;
-	mov.u32 	%r9, %nctaid.x;
-	mul.lo.s32 	%r3, %r9, %r1;
+	cvta.to.global.u64 	%rd3, %rd6;
+	mov.u32 	%r13, 0;
 
 BB1_2:
-	mul.wide.s32 	%rd7, %r10, 4;
-	add.s64 	%rd8, %rd3, %rd7;
+	add.s32 	%r12, %r3, %r13;
+	mul.wide.u32 	%rd7, %r12, 4;
+	add.s64 	%rd8, %rd1, %rd7;
 	add.s64 	%rd9, %rd2, %rd7;
 	ld.global.f32 	%f1, [%rd9];
 	ld.global.f32 	%f2, [%rd8];
 	sub.f32 	%f3, %f2, %f1;
-	add.s64 	%rd10, %rd1, %rd7;
+	add.s64 	%rd10, %rd3, %rd7;
 	st.global.f32 	[%rd10], %f3;
-	add.s32 	%r10, %r3, %r10;
-	setp.lt.s32	%p2, %r10, %r6;
+	add.s32 	%r13, %r2, %r13;
+	setp.lt.u32	%p2, %r13, %r1;
 	@%p2 bra 	BB1_2;
 
 BB1_3:
@@ -116,43 +120,47 @@ BB1_3:
 	.param .u64 mul_param_0,
 	.param .u64 mul_param_1,
 	.param .u64 mul_param_2,
-	.param .u32 mul_param_3
+	.param .u32 mul_param_3,
+	.param .u32 mul_param_4
 )
 {
 	.reg .pred 	%p<3>;
 	.reg .f32 	%f<4>;
-	.reg .b32 	%r<11>;
+	.reg .b32 	%r<14>;
 	.reg .b64 	%rd<11>;
 
 
 	ld.param.u64 	%rd4, [mul_param_0];
 	ld.param.u64 	%rd5, [mul_param_1];
 	ld.param.u64 	%rd6, [mul_param_2];
-	ld.param.u32 	%r6, [mul_param_3];
-	mov.u32 	%r1, %ntid.x;
-	mov.u32 	%r7, %ctaid.x;
-	mov.u32 	%r8, %tid.x;
-	mad.lo.s32 	%r10, %r1, %r7, %r8;
-	setp.ge.s32	%p1, %r10, %r6;
+	ld.param.u32 	%r7, [mul_param_3];
+	ld.param.u32 	%r6, [mul_param_4];
+	mul.lo.s32 	%r1, %r6, %r7;
+	setp.eq.s32	%p1, %r1, 0;
 	@%p1 bra 	BB2_3;
 
-	cvta.to.global.u64 	%rd1, %rd6;
+	add.s32 	%r2, %r6, %r6;
+	mov.u32 	%r9, %tid.x;
+	mov.u32 	%r10, %ctaid.x;
+	mov.u32 	%r11, %ntid.x;
+	mad.lo.s32 	%r3, %r11, %r10, %r9;
+	cvta.to.global.u64 	%rd1, %rd4;
 	cvta.to.global.u64 	%rd2, %rd5;
-	cvta.to.global.u64 	%rd3, %rd4;
-	mov.u32 	%r9, %nctaid.x;
-	mul.lo.s32 	%r3, %r9, %r1;
+	cvta.to.global.u64 	%rd3, %rd6;
+	mov.u32 	%r13, 0;
 
 BB2_2:
-	mul.wide.s32 	%rd7, %r10, 4;
-	add.s64 	%rd8, %rd3, %rd7;
+	add.s32 	%r12, %r3, %r13;
+	mul.wide.u32 	%rd7, %r12, 4;
+	add.s64 	%rd8, %rd1, %rd7;
 	add.s64 	%rd9, %rd2, %rd7;
 	ld.global.f32 	%f1, [%rd9];
 	ld.global.f32 	%f2, [%rd8];
 	mul.f32 	%f3, %f2, %f1;
-	add.s64 	%rd10, %rd1, %rd7;
+	add.s64 	%rd10, %rd3, %rd7;
 	st.global.f32 	[%rd10], %f3;
-	add.s32 	%r10, %r3, %r10;
-	setp.lt.s32	%p2, %r10, %r6;
+	add.s32 	%r13, %r2, %r13;
+	setp.lt.u32	%p2, %r13, %r1;
 	@%p2 bra 	BB2_2;
 
 BB2_3:

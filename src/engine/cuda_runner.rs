@@ -43,7 +43,13 @@ impl KernelRunner {
         self.buffers.push(dev_buffer);
     }
 
-    pub fn launch_binary_arithmetics_kernel(&mut self, config: KernelConfiguration) -> Result<()> {
+    pub fn launch_binary_arithmetics_kernel(
+        &mut self,
+        config: KernelConfiguration,
+        a_index: usize,
+        b_index: usize,
+        out_index: usize,
+    ) -> Result<()> {
         let kernel_fun_name = config.kernel_name.as_str();
         let total_work_items = config.work_items;
         let work_group_size = config.work_group_size;
@@ -61,9 +67,9 @@ impl KernelRunner {
         let buffers = &mut self.buffers;
         unsafe {
             launch!(fun<<<grid_size, work_group_size, 0, stream>>>(
-                buffers[0].as_device_ptr(),
-                buffers[1].as_device_ptr(),
-                buffers[2].as_device_ptr(),
+                buffers[a_index].as_device_ptr(),
+                buffers[b_index].as_device_ptr(),
+                buffers[out_index].as_device_ptr(),
                 config.batch_size,
                 stride
             ))?;
