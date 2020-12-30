@@ -45,8 +45,9 @@ impl KernelRunner {
 
     pub fn launch(&mut self, config: KernelConfiguration) -> Result<()> {
         let kernel_fun_name = config.kernel_name.as_str();
-        let global_work_size = config.work_items;
+        let total_work_items = config.work_items;
         let work_group_size = config.work_group_size;
+        let grid_size = total_work_items / work_group_size;
 
         let module: &Module = self.module.as_ref().unwrap();
         let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;
@@ -56,7 +57,7 @@ impl KernelRunner {
 
         let buffers = &mut self.buffers;
         unsafe {
-            let result = launch!(fun<<<global_work_size, work_group_size, 0, stream>>>(
+            let result = launch!(fun<<<grid_size, work_group_size, 0, stream>>>(
                 buffers[0].as_device_ptr(),
                 buffers[1].as_device_ptr(),
                 buffers[3].as_device_ptr(),

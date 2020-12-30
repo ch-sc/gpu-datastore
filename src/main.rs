@@ -1,5 +1,5 @@
 #![feature(array_methods)]
-
+#![feature(abi_ptx)]
 use gpu_datastore::common::prelude::*;
 use gpu_datastore::engine::prelude::{KernelConfiguration, KernelRunner};
 
@@ -49,6 +49,10 @@ fn generate_data(elements: usize) -> Result<Vec<f64>> {
 }
 
 fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
+    // load different module
+    let module_data = CString::new(include_str!("../resources/binary_arithmetics.ptx"))?;
+    runner.load_file(&module_data)?;
+
     let elements = (DATA_SIZE / mem::size_of::<f64>()) as usize;
 
     let vec_a = generate_data(elements)?;
