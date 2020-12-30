@@ -9,7 +9,7 @@ use rustacuda::memory::DeviceBuffer;
 use std::ffi::CString;
 use std::mem;
 
-const DATA_SIZE: usize = 16 * MB as usize;
+const DATA_SIZE: usize = 16 * KB as usize;
 
 fn test_run_1(runner: &mut KernelRunner) -> Result<()> {
     let result = runner.launch_test_kernel()?;
@@ -53,18 +53,19 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
     let module_data = CString::new(include_str!("../resources/binary_arithmetics.ptx"))?;
     runner.load_file(&module_data)?;
 
-    let elements = (DATA_SIZE / mem::size_of::<f64>()) as usize;
+    const ELEMENTS: usize = (DATA_SIZE / mem::size_of::<f64>()) as usize;
 
-    let vec_a = generate_data(elements)?;
-    let vec_b = generate_data(elements)?;
-    let vec_out = &mut [0_f64; DATA_SIZE];
+    let vec_a = generate_data(ELEMENTS)?;
+    let vec_b = generate_data(ELEMENTS)?;
+    let vec_out = &mut [0_f64; ELEMENTS];
 
-    let config = KernelConfiguration::new("add", 128, 128, elements as u32, 0);
+    let config = KernelConfiguration::new("add", 128, 128, ELEMENTS as u32, 0);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_a)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_b)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(vec_out)?);
     runner.launch_expr_binary_kernel(config)?;
-    runner.collect_result(2, vec_out, elements)?;
+    runner.collect_result(2, vec_out, ELEMENTS)?;
+    dbg!(vec_out);
     Ok(())
 }
 
