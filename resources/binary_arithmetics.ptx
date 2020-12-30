@@ -7,7 +7,7 @@
 //
 
 .version 6.4
-.target sm_32
+.target sm_72
 .address_size 64
 
 	// .globl	add

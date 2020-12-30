@@ -4,12 +4,13 @@ use gpu_datastore::common::prelude::*;
 use gpu_datastore::engine::prelude::{KernelConfiguration, KernelRunner};
 
 use arrow::array::{Array, PrimitiveBuilder};
+
 use arrow::datatypes::Float64Type;
 use rustacuda::memory::DeviceBuffer;
 use std::ffi::CString;
 use std::mem;
 
-const DATA_SIZE: usize = 16 * MB as usize;
+const DATA_SIZE: usize = 1 * GB as usize;
 
 fn test_run_1(runner: &mut KernelRunner) -> Result<()> {
     let result = runner.launch_test_kernel()?;
@@ -36,10 +37,18 @@ fn test_run_2(runner: &mut KernelRunner) -> Result<()> {
     Ok(())
 }
 
-fn generate_data(values: usize) -> Result<Box<[f64]>> {
+fn generate_data() -> Result<Box<[f64]>> {
+    const VALUES_COUNT: usize = DATA_SIZE / mem::size_of::<f64>();
+
     // create arrow primitive array
-    let mut builder = PrimitiveBuilder::<Float64Type>::new(values);
-    (0..DATA_SIZE).try_for_each(|i| builder.append_value((i % 128) as f64))?;
+    let mut builder = PrimitiveBuilder::<Float64Type>::new(VALUES_COUNT);
+    let buffer = (0..VALUES_COUNT)
+        .map(|x| (x % 128) as f64)
+        .collect::<Vec<f64>>()
+        .into_boxed_slice();
+    let validity_vector = &[true; VALUES_COUNT];
+    // builder.append_value((i % 128) as f64)
+    builder.append_values(&buffer, validity_vector)?;
     let array = builder.finish();
 
     // arrow array -> native array
@@ -55,12 +64,12 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
 
     const VALUES: usize = DATA_SIZE / mem::size_of::<f64>();
 
-    let vec_a = generate_data(VALUES)?;
-    let vec_b = generate_data(VALUES)?;
+    let vec_a = generate_data()?;
+    let vec_b = generate_data()?;
     let vec_out = &mut vec![0_f64; VALUES].into_boxed_slice();
     // let vec_out = &mut [0_f64; VALUES]
 
-    let config = KernelConfiguration::new("add", 128, 128, VALUES as u32, 0);
+    let config = KernelConfiguration::new("add", 512, 1024, VALUES as u32, 0);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_a)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(&vec_b)?);
     runner.allocate_buffer(DeviceBuffer::from_slice(vec_out)?);
@@ -76,7 +85,6 @@ fn test_run_3(runner: &mut KernelRunner) -> Result<()> {
         .expect("expected max");
     dbg!(min);
     dbg!(max);
-    vec_out.iter().filter(|x| **x == *min).count();
     dbg!(vec_out.iter().filter(|x| x.eq(&min)).count());
     dbg!(vec_out.iter().filter(|x| x.eq(&max)).count());
     Ok(())

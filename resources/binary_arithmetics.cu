@@ -1,5 +1,6 @@
 // compile command:
-// nvcc binary_arithmetics.ptx --gpu-architecture=compute_32
+// https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
+// nvcc binary_arithmetics.cu --ptx -o binary_arithmetics.ptx --gpu-architecture=compute_72 --gpu-code=sm_72,compute_72
 
 
 extern "C" __global__ void add(const float* vec_a,
